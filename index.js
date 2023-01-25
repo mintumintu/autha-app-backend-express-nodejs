@@ -32,6 +32,20 @@ const user = await User.findOne({email})
     })
 })
 
+app.get('/data', async (req,res)=>{
+    try{
+        const token  = req.header('Authorization')
+        const decode = jwt.verify(token,process.env.SECRET_KEY);
+        const {email} = decode
+        const data = await User.findOne({email})
+        res.status(200).send(data)
+    }
+    catch(error){
+        res.status(401).send(error)
+    }
+
+})
+
 app.post('/register',async (req,res)=>{
 try{
     const {name,email,password}= req.body;
@@ -88,7 +102,7 @@ app.post('/login',async (req,res)=>{
     //     success: true,
     //     token
     // });
-    res.status(200).json({token})
+    res.status(200).send(token)
 };
 
     res.status(400).send("Email or password is incorrect");
