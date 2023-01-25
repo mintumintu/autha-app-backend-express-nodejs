@@ -4,8 +4,8 @@ const User = require('../models/users');
 //model is optional
 
 const auth = (req,res,next)=>{
-    const token  = req.header('Authorization').replace('Bearer ','')
-    || req.cookies.token || req.body.token ;
+    // const token  = req.header('Authorization').replace('Bearer ','')|| req.cookies.token || req.body.token ;
+    const token = req.cookies.token;
 
     if(!token){
         return res.status(403).send("token is missing")

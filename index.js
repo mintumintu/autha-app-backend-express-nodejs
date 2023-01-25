@@ -5,11 +5,13 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const auth = require('./middleware/auth');
 const Contact = require('./models/contacts')
+const cors = require('cors');
 
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 app.get('/',(req,res)=>{
     res.status(200).send("<h1>Welcome to the AuthAppNew")
@@ -34,7 +36,7 @@ app.post('/register',async (req,res)=>{
 try{
     const {name,email,password}= req.body;
     if(!(email && password && name)){
-        res.status(400).send("All fields are required");
+        res.status(401).send("All fields are required");
     }
 
     const existingUser = await User.findOne({email});
@@ -49,7 +51,7 @@ try{
     })
 
     user.save();
-    res.send("Data saved successfully");
+    res.status(200).send({message:"data saved successfully"});
 }
 catch(error){
     console.log(error);
@@ -78,11 +80,16 @@ app.post('/login',async (req,res)=>{
     user.token = token
     user.password = undefined
     // res.status(200).json(user)
-       const options ={
-        expires : new Date(Date.now() *3*24 * 60 * 60 * 1000)
-       }
-    res.status(200).send({user});
-}
+    //    const options ={
+    //     expires : new Date(Date.now() +3*24 * 60 * 60 * 1000),
+    //     httpOnly :true,
+    //    }
+    // res.status(200).cookie('token',token,options).json({
+    //     success: true,
+    //     token
+    // });
+    res.status(200).json({token})
+};
 
     res.status(400).send("Email or password is incorrect");
 
