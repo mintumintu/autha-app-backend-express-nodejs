@@ -6,12 +6,14 @@ const jwt = require('jsonwebtoken');
 const auth = require('./middleware/auth');
 const Contact = require('./models/contacts')
 const cors = require('cors');
+const cookieParser = require('cookie-parser')
 
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(cookieParser())
 
 app.get('/',(req,res)=>{
     res.status(200).send("<h1>Welcome to the AuthAppNew")
@@ -32,9 +34,32 @@ const user = await User.findOne({email})
     })
 })
 
+//Data route to get token from localstorage and header
+
+
+// app.get('/data', async (req,res)=>{
+//     try{
+//         const token  = req.header('Authorization')
+//         const decode = jwt.verify(token,process.env.SECRET_KEY);
+//         const {email} = decode
+//         const data = await User.findOne({email})
+//         res.status(200).send(data)
+//     }
+//     catch(error){
+//         res.status(401).send(error)
+//     }
+
+// })
+
+
+//end of first data route
+
+//Data route to get token from cookie
+
+
 app.get('/data', async (req,res)=>{
     try{
-        const token  = req.header('Authorization')
+        const token  = req.cookies.authtoken
         const decode = jwt.verify(token,process.env.SECRET_KEY);
         const {email} = decode
         const data = await User.findOne({email})
@@ -45,6 +70,10 @@ app.get('/data', async (req,res)=>{
     }
 
 })
+
+
+//end of second data route
+
 
 app.post('/register',async (req,res)=>{
 try{
@@ -72,6 +101,44 @@ catch(error){
 }
 });
 
+//login route data is sent as only normal response where data is stored in local Storage
+
+// app.post('/login',async (req,res)=>{
+//     try{
+//         const {email,password}= req.body;
+//         if(!(email && password)){
+//             res.status(400).send("Field is missing");
+//         }
+//     const user = await User.findOne({email})
+//     if(!user){
+//         res.status.sendI("You are not registered");
+//     }
+
+//    if(user && (await bcrypt.compare(password,user.password))){
+//     const token = jwt.sign(
+//        { user_id:user._id,email},
+//        process.env.SECRET_KEY,
+//        {
+//         expiresIn:"2h"
+//        }
+//     )
+//     user.token = token
+//     user.password = undefined
+//     res.status(200).send(token)
+// };
+
+//     res.status(400).send("Email or password is incorrect");
+
+//     }catch(error){
+//         console.log(error);
+//     }
+// })
+
+// end of first login route
+
+
+// login route where token is sent as secure cookie
+
 app.post('/login',async (req,res)=>{
     try{
         const {email,password}= req.body;
@@ -93,16 +160,14 @@ app.post('/login',async (req,res)=>{
     )
     user.token = token
     user.password = undefined
-    // res.status(200).json(user)
-    //    const options ={
-    //     expires : new Date(Date.now() +3*24 * 60 * 60 * 1000),
-    //     httpOnly :true,
-    //    }
-    // res.status(200).cookie('token',token,options).json({
-    //     success: true,
-    //     token
-    // });
-    res.status(200).send(token)
+       const options ={
+        expires : new Date(Date.now() +3 * 24 * 60 * 60 * 1000),
+        httpOnly :true,
+       }
+    res.cookie('authtoken',token,options).json({
+        success: true,
+        token: user.token
+    });
 };
 
     res.status(400).send("Email or password is incorrect");
@@ -111,6 +176,14 @@ app.post('/login',async (req,res)=>{
         console.log(error);
     }
 })
+
+
+
+
+
+
+
+// end of login route 2
 
 app.get('/contacts',auth,async (req,res)=>{
     res.status(200).send("All the contacts")
